@@ -81,15 +81,21 @@ class Converter():
 
     def outputHighlight(self) -> None:
         for book in self.books:
-            with open(f'output/{book.title}.csv', 'w') as f:
+            with open(f'output/{book.title}/{book.title}.csv', 'w') as f:
                 writer = csv.writer(f)
-                writer.writerow(['Time', 'Type', 'Location', 'Content'])
+                writer.writerow(['Content', 'Type', 'Location', 'Time'])
                 for highlight in book.highlights:
                     writer.writerow(
-                        [highlight.time, 'Highlight', highlight.location, highlight.content])
+                        [highlight.content, 'Highlight', highlight.location, highlight.time])
                 for note in book.notes:
                     writer.writerow(
-                        [note.time, 'Note', note.location, note.content])
+                        [note.content, 'Note', note.location, note.time, ])
                 for bookmark in book.bookmarks:
                     writer.writerow(
-                        [bookmark.time, 'Bookmark', bookmark.location])
+                        ['', 'Bookmark', bookmark.location,  bookmark.time])
+
+            with open(f'output/{book.title}/{book.title}.txt', 'w') as f:
+                for highlight in book.highlights:
+                    f.write(f'{highlight.content}\n\n')
+                for note in book.notes:
+                    f.write(f'{note.content}\n\n')
