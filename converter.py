@@ -95,6 +95,7 @@ class Converter():
                         ['', 'Bookmark', bookmark.location,  bookmark.time])
 
             with open(f'output/{book.title}.txt', 'w') as f:
+                f.write('# Book highlights\n')
                 f.write('## Highlights\n')
                 for highlight in book.highlights:
                     f.write(f'- {highlight.content} ({highlight.location})\n')
