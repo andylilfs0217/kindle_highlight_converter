@@ -4,7 +4,7 @@ from enum import Enum
 class HighlightInput(Enum):
     none = 0
     clippings = 1
-    html = 2
+    kindle_html = 2
 
 
 class IOConverter():

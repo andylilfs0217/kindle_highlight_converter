@@ -38,10 +38,10 @@ class Converter():
                 pass
             case HighlightInput.clippings:
                 self.getHighlightFromClippings(input_source_folder)
-            case HighlightInput.html:
-                self.getHighlightFromHTML(input_source_folder)
+            case HighlightInput.kindle_html:
+                self.getHighlightFromKindleHTML(input_source_folder)
 
-    def getHighlightFromHTML(self, input_folder: str) -> None:
+    def getHighlightFromKindleHTML(self, input_folder: str) -> None:
         """
         Read all highlights in `html` folder and convert to [books].
         """
@@ -58,6 +58,7 @@ class Converter():
                 BOOK_AUTHORS = 'authors'
                 HIGHLIGHT_INFO = 'noteHeading'
                 HIGHLIGHT_CONTENT = 'noteText'
+                HIGHLIGHT_TAG = re.compile('highlight_*')
 
                 # Read the title
                 book_title = soup.find(class_=BOOK_TITLE).string.strip()
@@ -65,20 +66,25 @@ class Converter():
                 book_authors = soup.find(class_=BOOK_AUTHORS).string.strip()
                 # Create a book object
                 book = Book(f"{book_title} ({book_authors})")
-                # TODO: For each highlight html tag, parse it to Highlight object and append to list
+                # For each highlight html tag, parse it to Highlight object and append to list
                 highlight_infos = [info.text.strip()
                                    for info in soup.find_all(class_=HIGHLIGHT_INFO)]
                 highlights = [highlight.text.strip()
                               for highlight in soup.find_all(class_=HIGHLIGHT_CONTENT)]
+                highlight_tags = [highlight.text.strip()
+                                  for highlight in soup.find_all(class_=HIGHLIGHT_TAG)]
                 for i in range(len(highlight_infos)):
-                    info, highlight = highlight_infos[i], highlights[i]
-                    time = 0
-                    location = 0
-                    highlight_obj = Highlight(highlight, time, location)
+                    info, highlight, tag = highlight_infos[i], highlights[i], highlight_tags[i]
+                    time = 0  # No time set, default 0
+                    # Get highlight location
+                    location_index = info.index('Location')
+                    location = int(info[location_index+len('Location '):])
+                    # Create highlight object
+                    highlight_obj = Highlight(highlight, time, location, tag)
                     book.highlights.append(highlight_obj)
                 # TODO: For each note html tag, parse it to Note object and append to list
                 # TODO: For each bookmark html tag, parse it to Bookmark object and append to list
-                pass
+                self.books.append(book)
         pass
 
     def getHighlightFromClippings(self, input_folder: str) -> None:

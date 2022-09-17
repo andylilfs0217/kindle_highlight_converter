@@ -2,10 +2,15 @@ from typing import List
 
 
 class Highlight:
-    def __init__(self, content: str = '', time: int = 0, location: int = 0) -> None:
+    def __init__(self,
+                 content: str = '',
+                 time: int = 0,
+                 location: int = 0,
+                 tag: str = '') -> None:
         self.time = time
         self.location = location
         self.content = content
+        self.tag = tag
 
 
 class Bookmark:

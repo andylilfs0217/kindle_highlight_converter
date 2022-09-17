@@ -7,7 +7,7 @@ def main():
     io_converter = IOConverter()
 
     # highlight_input = io_converter.askHighlightInput()
-    highlight_input = HighlightInput.html  # For debug only
+    highlight_input = HighlightInput.kindle_html  # For debug only
 
     converter.getHighlights(highlight_input)
 
