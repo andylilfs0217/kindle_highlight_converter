@@ -5,6 +5,8 @@ class HighlightInput(Enum):
     none = 0
     clippings = 1
     kindle_html = 2
+    apple_book = 3
+    all = 9
 
 
 class IOConverter():

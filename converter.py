@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 
 
 class HighlightPosition(Enum):
+    # Clippings
     TITLE = 1
     INFO = 2
     CONTENT = 3
@@ -32,19 +33,83 @@ class Converter():
         """
         Get highlights by input.
         """
-        input_source_folder = str(highlight_input).split('.')[1]
-        match highlight_input:
-            case HighlightInput.none:
-                pass
-            case HighlightInput.clippings:
-                self.getHighlightFromClippings(input_source_folder)
-            case HighlightInput.kindle_html:
-                self.getHighlightFromKindleHTML(input_source_folder)
+        if highlight_input == HighlightInput.all or \
+                highlight_input == HighlightInput.clippings:
+            self.getHighlightFromClippings()
+        if highlight_input == HighlightInput.all or \
+                highlight_input == HighlightInput.kindle_html:
+            self.getHighlightFromKindleHTML()
+        if highlight_input == HighlightInput.all or \
+                highlight_input == HighlightInput.apple_book:
+            self.getHighlightFromAppleBook()
 
-    def getHighlightFromKindleHTML(self, input_folder: str) -> None:
+    def getHighlightFromAppleBook(self):
+        """
+        Read all highlights from Apple Book note export.
+        """
+        input_folder = 'apple_book'
+        directory = f"{self.INPUT_DIR}/{input_folder}"
+
+        # For each file in the input source folder
+        for filename in glob.iglob(f'{directory}/*'):
+            with open(filename) as fp:
+                file = filename.split('/')[-1]
+                file = file.split('.')[0]
+                # Get book title
+                book_title = file.split('-')[0]
+                # Get book author
+                book_authors = file.split('-')[1]
+                # Create book object
+                book = Book(f"{book_title} {book_authors}")
+                # Read all lines
+                lines = fp.readlines()
+                # Get book highlights
+                i = 0
+                while i < len(lines):
+                    line = lines[i]
+                    # Replace invisible characters
+                    line = line.replace('\ufeff', '')
+                    line = line.replace('\n', '')
+                    # Parse the date
+                    time = int(datetime.strptime(
+                        line, "%d %B %Y").timestamp())
+                    # Skip to the content
+                    i += 3
+                    content_list = []
+                    # Get all contents
+                    end_of_content = False
+                    while not end_of_content:
+                        line = lines[i]
+                        # Replace invisible characters
+                        line = line.replace('\ufeff', '')
+                        line = line.replace('\n', '')
+                        line = line.replace('\u3000', '')
+                        if line != 'Excerpt from:':
+                            content_list.append(line)
+                        else:
+                            # Reach the end of content
+                            end_of_content = True
+                        i += 1
+                    # Remove start quote and end quote
+                    content_list = content_list[:-1]
+                    content_list[0] = content_list[0][1:]
+                    content_list[-1] = content_list[0][:-1]
+                    # Combine the highlights
+                    content = ''.join(content_list)
+                    highlight = Highlight(content, time)
+                    # Add the highlight to the book
+                    book.highlights.append(highlight)
+                    i += 3
+                # TODO: Get book bookmarks
+                # TODO: Get book notes
+            # Save the book to the self object
+            self.books.append(book)
+
+    def getHighlightFromKindleHTML(self) -> None:
         """
         Read all highlights in `html` folder and convert to [books].
         """
+        input_folder = 'kindle_html'
         directory = f"{self.INPUT_DIR}/{input_folder}"
 
         # For each file in the input source folder
@@ -87,10 +152,11 @@ class Converter():
                 self.books.append(book)
         pass
 
-    def getHighlightFromClippings(self, input_folder: str) -> None:
+    def getHighlightFromClippings(self) -> None:
         """
         Read all highlights from `My Clippings.txt` and convert to [books]
         """
+        input_folder = 'clippings'
         file_name = 'My Clippings.txt'
 
         directory = f"{self.INPUT_DIR}/{input_folder}/{file_name}"
