@@ -7,7 +7,7 @@ def main():
     io_converter = IOConverter()
 
     # highlight_input = io_converter.askHighlightInput()
-    highlight_input = HighlightInput.apple_book
+    highlight_input = HighlightInput.all
 
     converter.getHighlights(highlight_input)
 

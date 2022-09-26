@@ -132,25 +132,69 @@ class Converter():
                 # Create a book object
                 book = Book(f"{book_title} ({book_authors})")
                 # For each highlight html tag, parse it to Highlight object and append to list
-                highlight_infos = [info.text.strip()
-                                   for info in soup.find_all(class_=HIGHLIGHT_INFO)]
-                highlights = [highlight.text.strip()
-                              for highlight in soup.find_all(class_=HIGHLIGHT_CONTENT)]
+                headings = [info.text.strip()
+                            for info in soup.find_all(class_=HIGHLIGHT_INFO)]
+                texts = [highlight.text.strip()
+                         for highlight in soup.find_all(class_=HIGHLIGHT_CONTENT)]
                 highlight_tags = [highlight.text.strip()
                                   for highlight in soup.find_all(class_=HIGHLIGHT_TAG)]
+
+                heading_idx, text_idx = 0, 0
+                highlight_infos, highlights = [], []
+                note_infos, notes = [], []
+                bookmark_infos = []
+                while heading_idx < len(headings):
+                    heading = headings[heading_idx]
+                    text = texts[text_idx]
+                    heading_split = [info.strip()
+                                     for info in heading.split('-')]
+                    if heading_split[0] == 'Bookmark':
+                        bookmark_infos.append(heading)
+                    elif heading_split[0] == 'Note':
+                        note_infos.append(heading)
+                        notes.append(text)
+                        text_idx += 1
+                    else:
+                        highlight_infos.append(heading)
+                        highlights.append(text)
+                        text_idx += 1
+                    heading_idx += 1
+
+                # For each highlight html tag, parse it to Highlight object and append to list
                 for i in range(len(highlight_infos)):
-                    info, highlight, tag = highlight_infos[i], highlights[i], highlight_tags[i]
+                    highlight_info, highlight, tag = highlight_infos[i], highlights[i], highlight_tags[i]
                     time = 0  # No time set, default 0
                     # Get highlight location
-                    location_index = info.index('Location')
-                    location = int(info[location_index+len('Location '):])
+                    location_index = highlight_info.index('Location')
+                    location = int(
+                        highlight_info[location_index+len('Location '):])
                     # Create highlight object
                     highlight_obj = Highlight(highlight, time, location, tag)
                     book.highlights.append(highlight_obj)
-                # TODO: For each note html tag, parse it to Note object and append to list
-                # TODO: For each bookmark html tag, parse it to Bookmark object and append to list
+                # For each note html tag, parse it to Note object and append to list
+                for i in range(len(note_infos)):
+                    # No time set, default 0
+                    note_info, note = note_infos[i], notes[i]
+                    time = 0
+                    # Get note location
+                    location_index = note_info.index('Location')
+                    location = int(note_info[location_index+len('Location '):])
+                    # Create note object
+                    note_obj = Note(note, time, location)
+                    book.notes.append(note_obj)
+                # For each bookmark html tag, parse it to Bookmark object and append to list
+                for i in range(len(bookmark_infos)):
+                    # No time set, default 0
+                    bookmark_info = bookmark_infos[i]
+                    time = 0
+                    # Get note location
+                    location_index = bookmark_info.index('Location')
+                    location = int(
+                        bookmark_info[location_index+len('Location '):])
+                    # Create note object
+                    bookmark_obj = Bookmark(location, time)
+                    book.bookmarks.append(bookmark_obj)
                 self.books.append(book)
-        pass
 
     def getHighlightFromClippings(self) -> None:
         """
